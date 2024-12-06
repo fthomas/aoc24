@@ -1,4 +1,4 @@
-object Day06 extends App {
+object Day06 {
 
   type Grid = Vector[Vector[Char]]
 

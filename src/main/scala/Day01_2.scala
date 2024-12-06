@@ -12,7 +12,7 @@ object Day01_2 {
 
   val firsts = x.map(_._1).sorted
   val seconds = x.map(_._2).sorted
-  val occurrences = seconds.groupBy(identity).filterKeys(firsts.contains)
+  val occurrences = seconds.groupBy(identity).view.filterKeys(firsts.contains)
 
   val similarity = occurrences.map { case (i, is) => i * is.size }
   println(similarity.sum)
