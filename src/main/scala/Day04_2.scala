@@ -1,4 +1,4 @@
-object Day04_02 {
+object Day04_2 {
   val path = os.pwd / "input" / "input_04.txt"
   val lines = os.read.lines(path).toVector
 

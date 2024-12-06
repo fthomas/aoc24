@@ -1,4 +1,4 @@
-object Day03_02 extends App {
+object Day03_2 {
   val path = os.pwd / "input" / "input_03.txt"
   val input: String = os.read(path)
 
