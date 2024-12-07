@@ -78,8 +78,6 @@ object Day06 {
     }
   }
 
-  // 16058 too high
-
   println(withObstacles.size)
   println(withObstacles.count(g => isLoop(startingPos, g)))
 }
