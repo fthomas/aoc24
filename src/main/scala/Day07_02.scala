@@ -1,4 +1,4 @@
-object Day07_02 extends App {
+object Day07_02 {
   case class Equation(testValue: BigInt, numbers: List[BigInt])
 
   sealed trait Eval {
