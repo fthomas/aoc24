@@ -1,6 +1,6 @@
 import scala.collection.mutable
 
-object Day08_02 extends App {
+object Day08_02 {
 
   case class Dist(dx: Int, dy: Int) {
     def mul(n: Int): Dist = Dist(dx * n, dy * n)
