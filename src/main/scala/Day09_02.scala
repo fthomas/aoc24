@@ -56,17 +56,13 @@ object Day09_02 extends App {
     go(maxId, files)
   }
 
-  def checksumOf(files: Vector[File]): BigInt =
-    files
-      .flatMap(_.toBlocks)
-      .zipWithIndex
-      .map { case (b, pos) =>
-        b match {
-          case Used(id) => BigInt(id) * BigInt(pos)
-          case Free     => BigInt(0)
-        }
+  def checksumOf(blocks: Vector[Block]): BigInt =
+    blocks.zipWithIndex.map { case (b, pos) =>
+      b match {
+        case Used(id) => BigInt(id) * BigInt(pos)
+        case Free     => BigInt(0)
       }
-      .sum
+    }.sum
 
   val path = os.pwd / "input" / "input_09.txt"
   val diskMap: String = os.read(path).trim
@@ -87,7 +83,7 @@ object Day09_02 extends App {
   val blocks = layout.flatMap(_.toBlocks)
   val compacted = compact(layout)
   val compactedBlocks = compacted.flatMap(_.toBlocks)
-  val checksum = checksumOf(compacted)
+  val checksum = checksumOf(compactedBlocks)
 
   println(blocks)
   println("---")
