@@ -13,17 +13,19 @@ object Day09 {
     val idx = blocks.indexWhere(_ == Free)
     if (idx == -1) blocks
     else {
-      blocks.last match
+      blocks.last match {
         case used @ Used(_) => compact(blocks.dropRight(1).updated(idx, used))
         case Free           => compact(blocks.dropRight(1))
+      }
     }
   }
 
   def checksum(blocks: Vector[Block]): BigInt =
     blocks.zipWithIndex.map { case (b, pos) =>
-      b match
+      b match {
         case Used(id) => BigInt(id) * pos
         case Free     => BigInt(0)
+      }
     }.sum
 
   val path = os.pwd / "input" / "input_09.txt"

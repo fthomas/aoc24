@@ -7,4 +7,4 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-effect" % "3.5.7"
 )
 
-scalacOptions ++= Seq("-deprecation")
+scalacOptions ++= Seq("-deprecation", "-no-indent")

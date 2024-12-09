@@ -1,87 +1,70 @@
 object Day09_02 extends App {
 
   sealed trait Block
+  case class Used(id: Int) extends Block
+  case object Free extends Block
 
-  case class Used(id: Int, length: Int) extends Block
-
-  case class Free(length: Int) extends Block
-
-  case class Dense(id: Int, length: Int, freeSpace: Int) {
+  case class File(id: Int, length: Int, freeSpace: Int) {
     def toBlocks: Vector[Block] =
-      Vector(Used(id, length), Free(freeSpace))
+      Vector.fill(length)(Used(id)) ++ Vector.fill(freeSpace)(Free)
   }
 
-  def compact(blocks: Vector[Block]): Vector[Block] = {
-    def go(currId: Int, blocks: Vector[Block]): Vector[Block] =
-      if (currId < 0) blocks
+  def move(files: Vector[File], from: Int, to: Int): Vector[File] = {
+    assert(from > to)
+    if ((from - to) == 1) {
+      val fst = files(to)
+      val snd = files(from)
+      files
+        .updated(to, fst.copy(freeSpace = 0))
+        .updated(from, snd.copy(freeSpace = snd.freeSpace + fst.freeSpace))
+    } else {
+      val (filesBeforeSrc, filesAfterSrc) = files.splitAt(from)
+      val (filesBeforeDst, filesAfterDst) = filesBeforeSrc.splitAt(to)
+
+      val src = filesAfterSrc.head
+      val dst = filesAfterDst.head
+      val dst1 = filesAfterDst.head.copy(freeSpace = 0)
+      val dst2 = src.copy(freeSpace = dst.freeSpace - src.length)
+      val beforeSrc = filesBeforeSrc.last
+      val beforeSrcUpdated =
+        beforeSrc.copy(freeSpace = beforeSrc.freeSpace + src.length + src.freeSpace)
+
+      filesBeforeDst ++
+        Vector(dst1, dst2) ++
+        filesAfterDst.drop(1).dropRight(1) ++
+        Vector(beforeSrcUpdated) ++
+        filesAfterSrc.drop(1)
+    }
+  }
+
+  def compact(files: Vector[File]): Vector[File] = {
+    def go(currId: Int, files: Vector[File]): Vector[File] = {
+      if (currId < 0) files
       else {
-        val idx = blocks.indexWhere {
-          case Used(id, _) => id == currId
-          case Free(_)     => false
-        }
-        if (idx == -1) blocks
+        val splitIdx = files.indexWhere(_.id == currId)
+        val (before, after) = files.splitAt(splitIdx)
+        val file = after.head
+        val freeIdx = before.indexWhere(other => other.freeSpace >= file.length)
+        if (freeIdx == -1) go(currId - 1, files)
         else {
-          val used = blocks(idx).asInstanceOf[Used]
-          val (beforeUsed, afterUsed) = blocks.splitAt(idx)
-          val freeIdx = beforeUsed.indexWhere {
-            case Free(length) => length >= used.length
-            case _            => false
-          }
-          if (freeIdx == -1) go(currId - 1, blocks)
-          else {
-            val free = beforeUsed(freeIdx).asInstanceOf[Free]
-            val (beforeFree, afterFree) = beforeUsed.splitAt(freeIdx)
-            val nextBlock = afterFree.lift(1)
-            val replace =
-              if (free.length > used.length) {
-                nextBlock match {
-                  case Some(next @ Used(_, _)) =>
-                    Vector(used, Free(free.length - used.length), next)
-                  case Some(Free(length)) =>
-                    Vector(used, Free(length + free.length - used.length))
-                  case None =>
-                    Vector(used, Free(free.length - used.length))
-                }
-              } else Vector(used, nextBlock)
-
-            val newFreeWhereUsed = {
-              (afterFree.drop(2).lastOption, afterUsed.lift(1)) match
-                case (Some(first: Used), Some(next: Used)) =>
-                  Vector(first, Free(used.length), next)
-                case (Some(Free(l1)), Some(Free(l))) =>
-                  Vector(Free(l1 + l + used.length))
-                case (Some(b), None) => Vector(b)
-                case _               => Vector.empty
-            }
-
-            val newBlocks =
-              beforeFree ++ replace ++ afterFree
-                .drop(2)
-                .dropRight(1) ++ newFreeWhereUsed ++
-                afterUsed.drop(2)
-            go(currId - 1, newBlocks)
-          }
+          val newFiles = move(files, splitIdx, freeIdx)
+          go(currId - 1, newFiles)
         }
       }
-
-    val maxId = blocks.map {
-      case Used(id, _) => id
-      case Free(_)     => -1
-    }.max
-    go(maxId, blocks)
+    }
+    val maxId = files.maxBy(_.id).id
+    go(maxId, files)
   }
 
-  def checksum(blocks: Vector[Block]): BigInt =
-    blocks
-      .flatMap {
-        case used @ Used(id, length) => Vector.fill(length)(Used(id, 1))
-        case Free(length)            => Vector.fill(length)(Free(1))
-      }
+  def checksumOf(files: Vector[File]): BigInt =
+    files
+      .flatMap(_.toBlocks)
       .zipWithIndex
       .map { case (b, pos) =>
-        b match
-          case Used(id, _) => BigInt(id) * pos
-          case Free(_)     => BigInt(0)
+        b match {
+          case Used(id) => BigInt(id) * BigInt(pos)
+          case Free     => BigInt(0)
+        }
       }
       .sum
 
@@ -93,18 +76,24 @@ object Day09_02 extends App {
     .grouped(2)
     .zipWithIndex
     .map { (s, id) =>
-      Dense(
+      File(
         id = id,
         length = s(0).getNumericValue,
         freeSpace = s.lift(1).map(_.getNumericValue).getOrElse(0)
       )
     }
     .toVector
+
   val blocks = layout.flatMap(_.toBlocks)
-  val compacted = compact(blocks)
+  val compacted = compact(layout)
+  val compactedBlocks = compacted.flatMap(_.toBlocks)
+  val checksum = checksumOf(compacted)
 
   println(blocks)
   println("---")
   println(compacted)
-  println(checksum(compacted))
+  println("---")
+  println(compactedBlocks)
+  println("---")
+  println(checksum)
 }
