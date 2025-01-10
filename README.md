@@ -1,1 +1,1 @@
-This repo has been moved to https://codeberg.org/fthomas/aoc24.
+This repo has been moved to https://codeberg.org/fthomas/aoc.
